@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'google.apps.GoogleConfig'
+    'google.apps.GoogleConfig',
+    'xencio.apps.XencioConfig'
 ]
 
 MIDDLEWARE = [
