@@ -6,6 +6,6 @@ from .account_classifier.classifier import AccountClassifier
 # Create your views here.
 def account_classifier(request, acc):
     classifier = AccountClassifier()
-    output = str(*classifier.check(acc))
-    print(output)
-    return HttpResponse(output)
+    outputs = [str(output) for output in classifier.check(acc)]
+    print(outputs)
+    return HttpResponse(outputs) if outputs else HttpResponse('Unknown')
