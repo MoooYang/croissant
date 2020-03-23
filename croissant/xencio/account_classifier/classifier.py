@@ -51,11 +51,14 @@ class AccountClassifier:
                 bank = Bank(bank_name, self.account.digits_count)
                 result = bank.check(self.account)
                 if result[0][0]:
+                    # Store the results in self.results temporarily
                     self.results.append((bank_name, result))
 
     def _parse_result(self):
-        result_dict = {}
+        results_list = []
+        # There might be multiple banks
         for result in self.results:
+            result_dict = {}
 
             """Unwrap result"""
             bank_name, check_result = result
@@ -67,7 +70,11 @@ class AccountClassifier:
             for key, value in other_result[1]:
                 result_dict[key] = value
 
-        return result_dict
+            results_list.append(result_dict)
+        # clear self.result cache
+        self.results = []
+
+        return results_list if results_list else 'Unknown'
 
 
 if __name__ == "__main__":

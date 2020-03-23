@@ -3,5 +3,5 @@ from . import views
 
 app_name = 'xencio'
 urlpatterns = [
-    path('account/', views.accountIdentifier, name='account'),
+    path('account/<str:acc>', views.account_classifier, name='account'),
 ]

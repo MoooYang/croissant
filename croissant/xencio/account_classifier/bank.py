@@ -1,5 +1,5 @@
 from .account import Account
-
+from os.path import exists
 
 class Bank:
     def __init__(self, name, digits):
@@ -8,9 +8,9 @@ class Bank:
         # list of int
         self.digits_counts = digits
         # list of tuple (tag, start, end, list(str)
-        self.fix_combinations_path = "./static/" + name + '_' + str(digits) + '_' + "fix_combinations"
+        self.fix_combinations_path = "./xencio/account_classifier/static/" + name + '_' + str(digits) + '_' + "fix_combinations"
         # path of file which contain location information
-        self.location_map_path = "./static/" + name + '_' + str(digits) + '_' + "location_map"
+        self.location_map_path = "./xencio/account_classifier/static/" + name + '_' + str(digits) + '_' + "location_map"
 
         """class feature"""
         # Temporarily store account object
@@ -29,25 +29,18 @@ class Bank:
         :return: (Boolean, List(Tuple(tag, Boolean),location)
         """
         self.account = account
-        parse_result = self._parse()
-        if parse_result[0]:
-            return parse_result, self._get_location()
-        return parse_result, 'Unknown'
-
-    def _parse(self):
-        """
-        check whether this account belongs to this bank
-        :return: (Boolean, List(Tuple(tag, Boolean))
-        """
         # reinitialise votes
         self.votes = []
-        self._check_digits_count()
+        # self._check_digits_count()
         self._check_fix_combinations()
-        return self.majority_vote()
+        vote_result = self._majority_vote()
+
+        if vote_result[0]:
+            return vote_result, self._get_location()
+        return vote_result, 'Unknown'
 
     def _check_fix_combinations(self):
-        if not self.fix_combinations:
-            self._read_fix_combinations()
+        self._read_fix_combinations()
         for combination in self.fix_combinations:
             """Unwrap combination"""
             tag, start, end, candidates = combination
@@ -60,7 +53,7 @@ class Bank:
                            self.digits_counts
                            if self.account.digits_count == self.digits_counts else False))
 
-    def majority_vote(self):
+    def _majority_vote(self):
         true = 0
         false = 0
         for tag, vote in self.votes:
@@ -68,29 +61,35 @@ class Bank:
                 true += 1
             else:
                 false += 1
-        return true >= false, self.votes
+        return true > false, self.votes
 
     def _get_location(self):
-        if not self.location_map:
-            self._read_location_map()
+        self._read_location_map()
+
+        if self.location_position:
             start, end = self.location_position[0], self.location_position[1]
-        return self.location_map.get(self.account.data[start:end],
-                                     'Unknown')
+            return self.location_map.get(self.account.data[start:end],
+                                         'Unknown')
+        return "No Data"
 
     def _read_location_map(self):
-        with open(self.location_map_path, 'r') as file:
-            line = file.readline().strip().split(',')
-            self.location_position = (int(line[0]), int(line[1])+1)
-            for line in file.readlines():
-                line = line.strip().split(',')
-                self.location_map[line[0]] = line[1]
+        # when file exists and have not read before
+        if exists(self.location_map_path) and not self.location_position:
+            with open(self.location_map_path, 'r') as file:
+                line = file.readline().strip().split(',')
+                self.location_position = (int(line[0]), int(line[1])+1)
+                for line in file.readlines():
+                    line = line.strip().split(',')
+                    self.location_map[line[0]] = line[1]
 
     def _read_fix_combinations(self):
-        with open(self.fix_combinations_path, 'r') as file:
-            for line in file.readlines():
-                line = line.strip().split(',')
-                tag, start, end, candidates = line[0], int(line[1]), int(line[2])+1, line[3:]
-                self.fix_combinations.append((tag, start, end, candidates))
+        # when file exists and have not read before
+        if exists(self.fix_combinations_path) and not self.fix_combinations:
+            with open(self.fix_combinations_path, 'r') as file:
+                for line in file.readlines():
+                    line = line.strip().split(',')
+                    tag, start, end, candidates = line[0], int(line[1]), int(line[2])+1, line[3:]
+                    self.fix_combinations.append((tag, start, end, candidates))
 
 
 if __name__ == "__main__":
