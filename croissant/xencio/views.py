@@ -6,10 +6,13 @@ from .account_classifier.classifier import AccountClassifier
 # Create your views here.
 def account_classifier(request, acc):
     classifier = AccountClassifier()
-    outputs = classifier.check(acc)
+    try:
+        outputs = classifier.check(acc)
+    except Exception as E:
+        return HttpResponse(str(E))
+
     if outputs:
-        outputs = [str(output) for output in outputs]
         print(outputs)
-        return HttpResponse(outputs)
+        return HttpResponse(str(outputs))
     else:
-        return HttpResponse('Invalidate Account')
+        return HttpResponse('Unknown')

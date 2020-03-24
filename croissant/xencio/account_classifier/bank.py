@@ -35,26 +35,29 @@ class Bank:
         self.account = account
         # reinitialise self.result
         self.result = ResultContainer(account, self.name)
-        if self.random:
-            return NotImplemented
-        # self._check_digits_count()
+        # if the bank random assign each account
         self._check_location()
+        self._check_digits_count()
         self._check_fix_combinations()
+        if self.random:
+            self.result.attributes_append('Randomness', 'True', 1)
+
         return self.result
 
     def _check_fix_combinations(self):
         self._read_fix_combinations()
         for combination in self.fix_combinations:
             """Unwrap combination"""
-            tag, start, end, candidates = combination
+            tag, start, end, candidates_dict = combination
             self.result.attributes_append(tag,
-                                          self.account.data[start:end],
-                                          self.account.data[start:end] in candidates)
+                                          candidates_dict.get(self.account.data[start:end], 'Unknown'),
+                                          1 if self.account.data[start:end] in candidates_dict else 0
+                                          )
 
     def _check_digits_count(self):
-        self.result.attributes_append('Digits count',
+        self.result.attributes_append('Digits Count',
                                       self.digits_counts,
-                                      self.account.digits_count == self.digits_counts)
+                                      0)
 
     def _check_location(self):
         self._read_location_map()
@@ -62,12 +65,12 @@ class Bank:
         if self.location_position:
             start, end = self.location_position[0], self.location_position[1]
             code = self.account.data[start:end]
-            self.result.attributes_append('location',
+            self.result.attributes_append('Location',
                                           self.location_map.get(code, 'Unknown'),
-                                          code in self.location_map
+                                          1 if code in self.location_map else 0
                                           )
         else:
-            self.result.attributes_append('location', 'No Data', False)
+            self.result.attributes_append('Location', 'No Data', 0)
 
     def _read_location_map(self):
         # when file exists and have not read before
@@ -85,8 +88,12 @@ class Bank:
             with open(self.fix_combinations_path, 'r') as file:
                 for line in file.readlines():
                     line = line.strip().split(',')
-                    tag, start, end, candidates = line[0], int(line[1]), int(line[2]) + 1, line[3:]
-                    self.fix_combinations.append((tag, start, end, candidates))
+                    tag, start, end, candidates_list = line[0], int(line[1]), int(line[2]) + 1, line[3:]
+                    candidates_dict = dict()
+                    for candidate in candidates_list:
+                        key, *value = candidate.split('-')
+                        candidates_dict[key] = value[0] if value else key
+                    self.fix_combinations.append((tag, start, end, candidates_dict))
 
 
 if __name__ == "__main__":

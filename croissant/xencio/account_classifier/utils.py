@@ -1,21 +1,26 @@
 class Account:
     def __init__(self, account):
         self.data = str(account).strip()
-        self.isdigit()
         # number of digits of the account
         self.digits_count = len(self.data)
+        self.isdigit()
+        self.valid_len()
 
     def isdigit(self):
         """
         check if any non-digit char in account
         """
         if not self.data.isdigit():
-            raise ValueError('Account can contain digits only')
+            raise ValueError('Error: account contain non-digits')
+
+    def valid_len(self):
+        if not 9 <= self.digits_count <= 21:
+            raise ValueError('Error: set a value of between 9 and 21 characters')
 
 
 class ResultContainer:
     def __init__(self, account, bank):
-        self.flag = False
+        self.flag = 0
         self.account = account
         self.attributes = dict()
 
@@ -26,18 +31,18 @@ class ResultContainer:
                            'citic': '中信银行'}
         self.bank = self.bank_alias[bank]
 
-    def majority_vote(self):
-        true, false = 0, 0
+    def evaluate(self):
+        """
+        May upgrade to rating system later on
+        :return:
+        """
         for attribute in self.attributes.values():
-            if attribute['flag']:
-                true += 1
-            else:
-                false += 1
-        self.flag = true > false
+            self.flag += attribute['weight']
+
         return self.flag
 
-    def attributes_append(self, title, contain, flag):
-        attribute = {'contain': contain, 'flag': flag}
+    def attributes_append(self, title, contain, weight):
+        attribute = {'contain': contain, 'weight': weight}
         self.attributes[title] = attribute
 
     def __str__(self):

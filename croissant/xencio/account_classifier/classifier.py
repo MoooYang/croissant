@@ -8,24 +8,24 @@ class AccountClassifier:
         self.account = None
         self.results = []
 
-        self.digits_count_map = {9: ['cmsb'],
-                                 12: ['boc'],
-                                 15: ['cmbc'],
-                                 16: ['cmsb'],
-                                 17: ['abc', 'ceb'],
-                                 18: ['cib', 'cgb', 'psbc'],
-                                 19: ['citic', 'cgb', 'icbc'],
-                                 20: ['ccb', 'spdb'],
-                                 21: ['bcm']
+        self.digits_count_map = {9: [('cmsb', True)],
+                                 12: [('boc', True)],
+                                 15: [('cmbc',)],
+                                 16: [('cmsb',)],
+                                 17: [('abc',), ('ceb',), ("spdb",)],
+                                 18: [('cib',), ('cgb',), ('psbc',)],
+                                 19: [('citic',), ('cgb',), ('icbc',)],
+                                 20: [('ccb',), ('spdb',)],
+                                 21: [('bcm',)]
                                  }
 
     def check(self, account):
         try:
             self.account = Account(account)
         except ValueError as E:
-            print(E)
-            return
-        return self._check_bank_candidates()
+            raise E
+        results = self._check_bank_candidates()
+        return max(results, key=lambda result: result.flag)
 
     def _check_bank_candidates(self):
         """
@@ -34,10 +34,10 @@ class AccountClassifier:
         results = list()
         bank_candidates = self._get_bank_candidates()
         if bank_candidates:
-            for bank_name in bank_candidates:
-                bank = Bank(bank_name, self.account.digits_count)
+            for bank_name, *isRandom in bank_candidates:
+                bank = Bank(bank_name, self.account.digits_count, isRandom)
                 result = bank.check(self.account)
-                if result.majority_vote():
+                if result.evaluate():
                     # Store the results in self.results temporarily
                     results.append(result)
         return results
