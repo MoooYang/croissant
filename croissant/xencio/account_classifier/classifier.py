@@ -25,7 +25,8 @@ class AccountClassifier:
         except ValueError as E:
             raise E
         results = self._check_bank_candidates()
-        return max(results, key=lambda result: result.flag)
+        if results:
+            return max(results, key=lambda result: result.flag)
 
     def _check_bank_candidates(self):
         """
